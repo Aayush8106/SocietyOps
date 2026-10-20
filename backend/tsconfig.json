@@ -1,0 +1,12 @@
+{
+    "compilerOptions":{
+        "rootDir": "./src",             //Root dir
+        "outDir" : "./dist",            //Output dir
+        "target": "es2022",             //js version
+        "module": "nodenext",           //how js imports are compiled
+        "moduleResolution":"nodenext",  //how ts finds imported files
+        "strict": true,                 //turns on all the strict typeChecks
+        "esModuleInterop": true,        //smooths over importing older packages.
+        "skipLibCheck": true,           //skips type checking inside installed packages, which avoids noisy errors
+    }
+}
