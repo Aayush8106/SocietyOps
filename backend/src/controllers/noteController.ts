@@ -30,3 +30,12 @@ export async function updateNote(req : Request ,  res : Response){
     }
     res.json(note);
 } 
+
+export async function deleteNote(req : Request , res : Response){
+    const {id} = req.params;
+    const note = await Note.findByIdAndDelete(id);
+    if(!note){
+        return res.json(404).json({message : "Note Not Found."});
+    }
+    res.json({message : "Note Deleted."});
+}
