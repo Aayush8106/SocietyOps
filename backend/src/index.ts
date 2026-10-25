@@ -3,6 +3,7 @@ import { createServer } from "http";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import noteRoutes from "./routes/noteRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ const PORT : number = Number(process.env.PORT) || 3000;
 
 app.use(express.json());
 app.use("/api/notes" , noteRoutes);
+app.use("/api/auth"  , authRoutes);
 
 const server = createServer(app);
 

@@ -5,7 +5,8 @@ const userSchema = new Schema({
     "email"      : {type : String , required : true , unique : true , "lowercase" : true},
     "password"   : {type : String , required : true},
     "role"       : {type : String , enum : ["resident" , "manager" , "staff"] , default : "resident"},
-    "flatNumber" : {type : String }
+    "flatNumber" : {type : String , required : true},
+    "wing" : {type : String , required : true}
 },{
     timestamps : true
 });
