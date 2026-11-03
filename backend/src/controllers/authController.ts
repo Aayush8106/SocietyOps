@@ -1,7 +1,9 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import { randomInt } from "crypto";
 import type{Request , Response} from "express";
 import jwt from "jsonwebtoken";
+import Otp from "../models/Otp.js";
 
 export async function login(req : Request , res : Response){
     try{
@@ -31,5 +33,50 @@ export async function login(req : Request , res : Response){
 
     }catch{
         res.status(500).json({ message: "Login failed" });
+    }
+}
+
+export async function sendOtp(req : Request , res : Response){
+    try{
+        const email = req.body.email.toLowerCase();
+        const existing = await User.findOne({email});
+        if(existing){
+            return res.status(409).json({ message: "Email already registered" });
+        }
+
+        const otp = randomInt(100000, 1000000);
+        const otpHash = await bcrypt.hash(String(otp), 10);
+
+        await Otp.findOneAndUpdate(
+            {email},
+            {otpHash , attempts : 0 , expiresAt : new Date( Date.now() + 5 * 60 * 1000 )},
+            {upsert : true}
+        );
+
+        const mailKey = process.env.MAIL_KEY;
+        if(!mailKey){
+             throw new Error("MAIL_KEY is not defined");
+        }
+
+        const response = await fetch('https://otp-sender-reuseable.vercel.app/societyops-otp',{
+            method:"POST",
+            headers:{
+                'x-api-key' : mailKey,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mail : email,
+                otp
+            })
+        }) 
+
+        if(!response.ok){
+            throw new Error("Mail Service Failed.");
+        }
+
+        res.json({ message: "OTP sent" });
+
+    }catch{
+        res.status(500).json({ message: "Failed to send OTP" });
     }
 }
