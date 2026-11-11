@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { login, sendOtp }  from "../controllers/authController.js";
+import { login, register, sendOtp }  from "../controllers/authController.js";
 
 const router = Router();
 
-router.post("/login", login);
-router.post("/send-otp", sendOtp);
+router.post("/login"    , login);
+router.post("/send-otp" , sendOtp);
+router.post("/register" , register);
 
 export default router;

@@ -80,3 +80,51 @@ export async function sendOtp(req : Request , res : Response){
         res.status(500).json({ message: "Failed to send OTP" });
     }
 }
+
+export async function register(req : Request , res : Response){
+    try{
+        const {name, password, wing, flatNumber, otp} = req.body;
+        const email = req.body.email.toLowerCase(); 
+        const otpDoc = await Otp.findOne({email});
+
+        if(!otpDoc){
+            return res.status(400).json({message : 'OTP expired or not requested.'});
+        }
+
+        if(otpDoc.expiresAt < new Date()){
+            return res.status(400).json({message : 'OTP expired.'});
+        }
+
+        if(otpDoc.attempts >= 5){
+            await Otp.deleteOne({email});
+            return res.status(429).json({message : 'Too many attempts. Request a new OTP.'});
+        }
+
+        const isMatch = await bcrypt.compare(String(otp),otpDoc.otpHash);
+
+        if(!isMatch){
+            await Otp.updateOne({email} , {$inc : {attempts : 1}});
+            return res.status(400).json({message : 'Invalid OTP.'});
+        }
+
+        const hashedPassword = await bcrypt.hash(password , 10);
+        const user = await User.create({name , email , password : hashedPassword , flatNumber , wing});
+        await Otp.deleteOne({email});
+
+        const secret = process.env.JWT_SECRET;
+        if(!secret){
+             throw new Error("JWT_SECRET is not defined");
+        }
+
+        const token = jwt.sign({id : user.id , role : user.role} , secret , {expiresIn:'1h'});
+
+        res.status(201).json({
+            message : "Register Successfull",
+            token,
+            user: { id: user._id, name: user.name, email: user.email, wing: user.wing, flatNumber: user.flatNumber, role: user.role }
+        });        
+
+    }catch{
+        res.status(500).json({ message: "Failed to Register" });
+    }
+}
